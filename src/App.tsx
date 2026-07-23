@@ -1,34 +1,44 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useState } from 'react'
 import './App.css'
 
+interface Task {
+  id: number
+  title: string
+  notes: string | null
+  recurring: number | null
+  due_date: string | null
+  position: number
+  archived_at: string | null
+}
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('http://localhost:3017/api/tasks')
+      .then((res) => {
+        if (!res.ok) throw new Error(`Request failed: ${res.status}`)
+        return res.json()
+      })
+      .then((data: Task[]) => setTasks(data))
+      .catch((err) => setError(err.message))
+  }, [])
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div>
+      <h1>Tasks</h1>
+      {error && <p>Error loading tasks: {error}</p>}
+      <ul>
+        {tasks.map((task) => (
+          <li key={task.id}>
+            {task.title}
+            {task.recurring != null && ` (every ${task.recurring} days)`}
+            {task.notes && ` — ${task.notes}`}
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
 
